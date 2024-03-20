@@ -125,14 +125,13 @@ contract Api3PriceFeed is IPriceFeed {
       return (Status.oracleWorking, response.answer, response.timestamp);
     }
 
-    // --- CASE 2: Api3 oracle is untrusted at the last price fetch ---
-    if (status == Status.oracleUntrusted) {
-      if (_oracleIsBroken(response) || _oracleIsFrozen(response)) {
-        return (Status.oracleUntrusted, lastGoodPrice, lastGoodTs);
-      }
-
-      return (Status.oracleWorking, response.answer, response.timestamp);
+    // --- CASE 2: Api3 oracle is untrusted at the last price fetch 
+    //     or last stored status was no valid enum ---
+    if (_oracleIsBroken(response) || _oracleIsFrozen(response)) {
+      return (Status.oracleUntrusted, lastGoodPrice, lastGoodTs);
     }
+
+    return (Status.oracleWorking, response.answer, response.timestamp);
   }
 
   // --- Helper functions ---
