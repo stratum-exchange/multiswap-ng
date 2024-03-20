@@ -191,6 +191,13 @@ contract Api3PriceFeed is IPriceFeed {
       return response;
     }
   }
+
+  function getCurrentResponse()
+    external
+    view
+  returns (OracleResponse memory response) {
+    return _getCurrentResponse();
+  }
   
   function isHealthy() external view returns (bool) {
     return status == Status.oracleWorking;
