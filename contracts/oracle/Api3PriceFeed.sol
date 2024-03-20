@@ -49,7 +49,7 @@ contract Api3PriceFeed is IPriceFeed {
   // The current status of the PriceFeed, which determines the conditions for the next price fetch attempt
   Status public status;
 
-  event LastGoodPriceUpdated(uint256 lastGoodPrice, uint256 prevGoodPrice, int256 deltaT);
+  event LastGoodPriceUpdated(uint256 lastGoodPrice, uint256 prevGoodPrice, uint256 deltaT);
   event PriceFeedStatusChanged(Status newStatus);
 
   // --- Dependency setters ---
@@ -98,7 +98,7 @@ contract Api3PriceFeed is IPriceFeed {
     (Status newStatus, uint256 price, uint256 timestamp) = _fetchPrice();
     require(block.timestamp.sub(timestamp) < TIMEOUT, "oracle is untrusted");
     if (lastGoodPrice != price || lastGoodTs != timestamp) {
-      emit LastGoodPriceUpdated(price, lastGoodPrice, int256(timestamp) - int256(lastGoodTs));
+      emit LastGoodPriceUpdated(price, lastGoodPrice, timestamp - lastGoodTs);
       lastGoodPrice = price;
       lastGoodTs = timestamp;
     }
