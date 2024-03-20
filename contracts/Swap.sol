@@ -665,6 +665,29 @@ contract Swap is OwnerPausable, ReentrancyGuard {
   }
 
   /**
+   * @notice Configures pedantic behavior for oracles.
+   * 
+   * @dev When a pedantic flag for an oracle is set to `true`, transactions that modify the pool ratio 
+   * (e.g., swaps but not removeLiquidity) will revert if the corresponding oracle's 
+   * latest price data is not considered healthy. 
+   * 
+   * If a pedantic flag is `false`, the oracle's most recent healthy price data is used, 
+   * provided it hasn't become outdated.
+   *
+   * This function allows the owner to selectively enforce stricter price data requirements 
+   * for specific oracles based on their perceived reliability.
+   *
+   * @param _pedantic An array of booleans, where each element corresponds to an oracle.
+   *  - `true`: Enforces healthy price data for the corresponding oracle on ratio-changing transactions.
+   *  - `false`: Allows using the oracle's most recent healthy price data (if not outdated) for ratio-changing transactions.
+   *
+   * Only the contract owner can call this function.
+   */
+  function setPedantic(bool[] memory _pedantic) external onlyOwner {
+    swapStorage.setPedantic(_pedantic);
+  }
+  
+  /**
    * @notice Start ramping up or down A parameter towards given futureA and futureTime
    * Checks if the change is too rapid, and commits the new A value only when it falls under
    * the limit range.

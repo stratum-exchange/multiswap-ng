@@ -90,6 +90,7 @@ library SwapUtils {
     uint256[2][] lastPrices; // last price, ma price
     uint256[2] lastD; // last D, ma D
     IPriceFeed[] oracles;
+    bool[] pedantic; // enforces healthy oracle reply from feed or reverts if active
   }
 
   // Struct storing variables used in calculations in the
@@ -1238,6 +1239,11 @@ library SwapUtils {
 
     emit NewSwapFee(newSwapFee);
   }
+  
+  function setPedantic(Swap storage self, bool[] memory _pedantic) external {
+    require(_pedantic.length == self.oracles.length);
+    self.pedantic = _pedantic;
+  }
 
   /**@notice Upkeeps price and D oracles. */
   function upkeepOracles(
@@ -1256,7 +1262,9 @@ library SwapUtils {
     for (uint256 i = 0; i < numTokens; i++) {
       if (self.assetTypes[i] == 1 && address(self.oracles[i]) != address(0)) {
         self.oracles[i].updatePrice();
-        require(self.oracles[i].isHealthy(), "oracle is not working");
+        if (i < self.pedantic.length && self.pedantic[i]) {
+          require(self.oracles[i].isHealthy(), "oracle is not working");
+        }
       }
     }
 
