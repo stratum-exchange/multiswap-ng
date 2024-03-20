@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@api3/contracts/v0.8/interfaces/IProxy.sol";
 
 /*
- * The Api3PriceFeed uses Flux as primary oracle. Returns 18 digits.
+ * The Api3PriceFeed uses Nodary as primary oracle. Returns 18 digits.
  */
 contract Api3PriceFeed is IPriceFeed {
 
@@ -30,8 +30,10 @@ contract Api3PriceFeed is IPriceFeed {
    */
   uint256 public constant MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES = 5e16; // 5%
 
-  // The last good price seen from an oracle by Liquity
+  // The last good price seen from an oracle
   uint256 public lastGoodPrice;
+  // The last good timestamp seen from an oracle
+  uint256 public lastGoodTs;
 
   struct OracleResponse {
     uint256 answer;
@@ -76,25 +78,28 @@ contract Api3PriceFeed is IPriceFeed {
 
   /*
    * fetchPrice():
-   * Returns the latest price obtained from the Oracle. Called by Liquity functions that require a current price.
+   * Returns the latest price obtained from the Oracle. Called by Stableswap functions that require a current price.
    *
    * Also callable by anyone externally.
    *
-   * Non-view function - it stores the last good price seen by Liquity.
+   * Non-view function - it stores the last good price.
    *
    * Uses a main oracle (Api3). If it fails,
-   * it uses the last good price seen by Liquity.
+   * it uses the last good price.
    *
    */
   function fetchPrice() external view override returns (uint256) {
-    (, uint256 price) = _fetchPrice();
+    (, uint256 price, uint256 timestamp) = _fetchPrice();
+    require(block.timestamp.sub(timestamp) < TIMEOUT, "oracle is untrusted");
     return price;
   }
 
   function updatePrice() external override returns (uint256) {
-    (Status newStatus, uint256 price) = _fetchPrice();
-    if (lastGoodPrice != price) {
+    (Status newStatus, uint256 price, uint256 timestamp) = _fetchPrice();
+    require(block.timestamp.sub(timestamp) < TIMEOUT, "oracle is untrusted");
+    if (lastGoodPrice != price || lastGoodTs != timestamp) {
       lastGoodPrice = price;
+      lastGoodTs = timestamp;
     }
     if (status != newStatus) {
       status = newStatus;
@@ -103,7 +108,7 @@ contract Api3PriceFeed is IPriceFeed {
     return price;
   }
 
-  function _fetchPrice() internal view returns (Status, uint256) {
+  function _fetchPrice() internal view returns (Status, uint256, uint256) {
     // Get current and previous price data from Api3, and current price data from Band
     OracleResponse memory response = _getCurrentResponse();
 
@@ -112,20 +117,20 @@ contract Api3PriceFeed is IPriceFeed {
       // If Api3 is broken or frozen
       if (_oracleIsBroken(response) || _oracleIsFrozen(response)) {
         // If Api3 is broken, switch to Band and return current Band price
-        return (Status.oracleUntrusted, lastGoodPrice);
+        return (Status.oracleUntrusted, lastGoodPrice, lastGoodTs);
       }
 
       // If Api3 is working, return Api3 current price (no status change)
-      return (Status.oracleWorking, response.answer);
+      return (Status.oracleWorking, response.answer, response.timestamp);
     }
 
     // --- CASE 2: Api3 oracle is untrusted at the last price fetch ---
     if (status == Status.oracleUntrusted) {
       if (_oracleIsBroken(response) || _oracleIsFrozen(response)) {
-        return (Status.oracleUntrusted, lastGoodPrice);
+        return (Status.oracleUntrusted, lastGoodPrice, lastGoodTs);
       }
 
-      return (Status.oracleWorking, response.answer);
+      return (Status.oracleWorking, response.answer, response.timestamp);
     }
   }
 
