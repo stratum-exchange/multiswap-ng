@@ -66,12 +66,12 @@ contract Api3PriceFeed is IPriceFeed {
     OracleResponse memory response = _getCurrentResponse();
 
     require(
-      !_oracleIsBroken(response) &&
-        block.timestamp.sub(response.timestamp) < _timeout,
+      !_oracleIsBroken(response) && !_oracleIsFrozen(response),
       "PriceFeed: Api3 must be working and current"
     );
 
     lastGoodPrice = uint256(response.answer);
+    lastGoodTs = uint256(response.timestamp);
   }
 
   // --- Functions ---
