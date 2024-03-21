@@ -14,7 +14,6 @@ contract Api3PriceFeed is IPriceFeed {
   using SafeMath for uint256;
 
   IProxy public proxy;
-  bytes32 public priceId;
 
   // Maximum time period allowed since Api3's latest round data timestamp, beyond which Api3 is considered frozen.
   // For stablecoins we recommend 90000, as Api3 updates once per day when there is no significant price movement
@@ -54,9 +53,8 @@ contract Api3PriceFeed is IPriceFeed {
 
   // --- Dependency setters ---
 
-  constructor(IProxy _proxy, bytes32 _priceId, uint256 _timeout) {
+  constructor(IProxy _proxy, uint256 _timeout) {
     proxy = _proxy;
-    priceId = _priceId;
     TIMEOUT = _timeout;
 
     // Explicitly set initial system status
