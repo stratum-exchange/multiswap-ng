@@ -70,7 +70,7 @@ library SwapUtils {
     uint256 futureATime;
     // fee calculation
     uint256 swapFee;
-    // uint256 adminFee;
+    uint256 adminFee;
     LPToken lpToken;
     // contract references for all tokens being pooled
     IERC20[] pooledTokens;
