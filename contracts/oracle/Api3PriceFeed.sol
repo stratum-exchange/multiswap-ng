@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "../interfaces/IPriceFeed.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@api3/contracts/v0.8/interfaces/IProxy.sol";
+import "@api3/contracts/api3-server-v1/proxies/interfaces/IProxy.sol";
 
 /*
  * The Api3PriceFeed uses Nodary as primary oracle. Returns 18 digits.
