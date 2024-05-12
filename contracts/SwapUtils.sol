@@ -666,6 +666,7 @@ library SwapUtils {
     dy = xp[tokenIndexTo].sub(y).sub(1);
     dyFee = dy.mul(self.swapFee).div(FEE_DENOMINATOR);
     dy = dy.sub(dyFee).mul(PRECISION).div(rates[tokenIndexTo]);
+    dyFee = dyFee.mul(PRECISION).div(rates[tokenIndexTo]);
     newXp = xp;
     newXp[tokenIndexFrom] = x;
     newXp[tokenIndexTo] = y;
